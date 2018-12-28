@@ -75,7 +75,12 @@ public class IntentLauncherModule extends ReactContextBaseJavaModule implements 
         if (params.hasKey(ATTR_CATEGORY)) {
             intent.addCategory(params.getString(ATTR_CATEGORY));
         }
-        getReactApplicationContext().startActivityForResult(intent, REQUEST_CODE, null); // 暂时使用当前应用的任务栈
+
+        try {
+            getReactApplicationContext().startActivityForResult(intent, REQUEST_CODE, null); // 暂时使用当前应用的任务栈
+        } catch (Exception e) {
+            this.promise.reject("ERROR_OPEN_ACTIVITY", "Error Open Activity");
+        }
     }
 
     @Override
