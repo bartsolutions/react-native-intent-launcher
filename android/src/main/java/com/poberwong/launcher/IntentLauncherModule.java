@@ -1,17 +1,20 @@
 package com.poberwong.launcher;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ComponentName;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.facebook.react.bridge.*;
 
-import java.io.Console;
-import java.util.Set;
-import java.util.Iterator;
 
 /**
  * Created by poberwong on 16/6/30.
@@ -36,6 +39,61 @@ public class IntentLauncherModule extends ReactContextBaseJavaModule implements 
     @Override
     public String getName() {
         return "IntentLauncher";
+    }
+
+    @ReactMethod
+    public void LaunchAutoStartSetting() {
+        //Get manufacturer
+        String manufacturer = Build.MANUFACTURER;
+        Log.i("AUTO_START", " deviceBrand : " + manufacturer);
+        Intent intent =new Intent();
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ComponentName comp =null;
+        if (!TextUtils.isEmpty(manufacturer)) {
+            if ("honor".equals(manufacturer.toLowerCase()) || "huawei".equals(manufacturer.toLowerCase())) {
+                if (Build.VERSION.SDK_INT >= 26) {
+                    comp = new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity");
+                } else if (Build.VERSION.SDK_INT >= 23) {
+                    comp = new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity");
+                } else {
+                    comp = new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.com.huawei.permissionmanager.ui.MainActivity");
+                }
+            } else if ("xiaomi".equals(manufacturer.toLowerCase())) {
+                comp = new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity");
+            } else if ("vivo".equals(manufacturer.toLowerCase())) {
+                if (Build.VERSION.SDK_INT >= 26) {
+                    comp = new ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.PurviewTabActivity");
+                } else {
+                    comp = new ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.SoftwareManagerActivity");
+                }
+            } else if ("oppo".equals(manufacturer.toLowerCase())) {
+                if (Build.VERSION.SDK_INT >= 26) {
+                    comp = new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity");
+                } else {
+                    comp = new ComponentName("com.color.safecenter", "com.color.safecenter.permission.startup.StartupAppListActivity");
+                }
+            } else if ("samsung".equals(manufacturer.toLowerCase())) {
+                comp = new ComponentName("com.samsung.android.sm_cn", "com.samsung.android.sm_cn.com.samsung.android.sm.ui.ram.AutoRunActivity");
+            }
+        }
+
+        //其他机型直接跳设置界面，适配的几个厂商中有不同系列的手机，可能会跳不到指定界面，因此需要在异常时调到普通设置界面做保护
+        Context context = getReactApplicationContext();
+        try {
+            if (comp == null) {
+                intent = new Intent(Settings.ACTION_SETTINGS);
+                context.startActivity(intent);
+            } else {
+                intent.setComponent(comp);
+                context.startActivity(intent);
+            }
+        } catch (Exception e) {
+            //抛出异常就直接打开设置页面 
+            e.printStackTrace();
+            intent = new Intent(Settings.ACTION_SETTINGS);
+            context.startActivity(intent);
+        }
+
     }
 
     /**
@@ -76,11 +134,7 @@ public class IntentLauncherModule extends ReactContextBaseJavaModule implements 
             intent.addCategory(params.getString(ATTR_CATEGORY));
         }
 
-        try {
-            getReactApplicationContext().startActivityForResult(intent, REQUEST_CODE, null); // 暂时使用当前应用的任务栈
-        } catch (Exception e) {
-            this.promise.reject("ERROR_OPEN_ACTIVITY", "Error Open Activity");
-        }
+        getReactApplicationContext().startActivityForResult(intent, REQUEST_CODE, null); // 暂时使用当前应用的任务栈
     }
 
     @Override
