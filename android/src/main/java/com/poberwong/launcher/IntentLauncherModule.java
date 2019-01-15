@@ -46,7 +46,7 @@ public class IntentLauncherModule extends ReactContextBaseJavaModule implements 
         //Get manufacturer
         String manufacturer = Build.MANUFACTURER;
         Log.i("AUTO_START", " deviceBrand : " + manufacturer);
-        Intent intent =new Intent();
+        Intent intent = new Intent();
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         ComponentName comp =null;
         if (!TextUtils.isEmpty(manufacturer)) {
@@ -82,6 +82,7 @@ public class IntentLauncherModule extends ReactContextBaseJavaModule implements 
         try {
             if (comp == null) {
                 intent = new Intent(Settings.ACTION_SETTINGS);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
             } else {
                 intent.setComponent(comp);
@@ -91,6 +92,7 @@ public class IntentLauncherModule extends ReactContextBaseJavaModule implements 
             //抛出异常就直接打开设置页面 
             e.printStackTrace();
             intent = new Intent(Settings.ACTION_SETTINGS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         }
 
